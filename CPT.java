@@ -12,7 +12,7 @@ class ValProb {
 	public double prob;
 	public String val;
 	
-	ValProb (double prob_ , String val_) {
+	ValProb ( String val_ , double prob_ ) {
 		prob = prob_;
 		val = val_;
 	}
@@ -40,10 +40,10 @@ class VarVal {
  */
 class CPT_entry {
 	
-	public ArrayList<String> parents_values = new ArrayList<String>();
+	public ArrayList<VarVal> parents_values = new ArrayList<VarVal>();
 	public ArrayList<ValProb> value_probs  = new ArrayList<ValProb>();
 	
-	public CPT_entry(ArrayList<String> parents_values_, ArrayList<ValProb> value_probs_) {
+	public CPT_entry(ArrayList<VarVal> parents_values_, ArrayList<ValProb> value_probs_) {
 		parents_values = parents_values_;
 		value_probs    = value_probs_;
 	}
@@ -51,6 +51,12 @@ class CPT_entry {
 	public boolean contains(ArrayList<String> subset) {
 		//for (String val)
 		return true;
+	}
+	
+	public void print() {
+		for (VarVal p : parents_values) System.out.print(p.val + ",");
+		for (ValProb vp : value_probs) System.out.print("=" + vp.val + "," + vp.prob);
+		System.out.print("\n");
 	}
 }
 
@@ -67,6 +73,12 @@ public class CPT {
 			return  0.1;	
 			}
 		return 0.1;
+	}
+	
+	public void print() {
+		System.out.println("CPT:");
+		for (CPT_entry e : entries) e.print();
+		System.out.println("");
 	}
 	
 }
