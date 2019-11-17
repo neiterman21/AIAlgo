@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import java.util.Iterator; 
 
 
@@ -18,11 +19,13 @@ import java.io.*;
 public class parser {
 
 	public ArrayList<Bvar> variables = new ArrayList<Bvar>(); //list of all the variables in the bayes network
+	public ArrayList<RandomQuery> queries = new ArrayList<RandomQuery>(); 
 	Bvar hot_var; //variable curently working on
 	
 	String input_file = "input.txt";
 		
 	Matcher m; 
+	
 	public  parser(String input)
 	{
 		input_file = input;
@@ -84,8 +87,8 @@ public class parser {
 	}
 	
 	private void setQueris(String line) throws Exception {
+		queries.add(RandomQuery.QueryBuilder(line, variables) );
 		return;
-		//throw new UnsupportedOperationException();
 	}
 	
 	private void setChildren() {
@@ -153,6 +156,10 @@ public class parser {
 		
 		for( Bvar v :p.variables) {
 			v.print();
+		}
+		
+		for( RandomQuery q :p.queries) {
+			q.print();
 		}
 	}
 

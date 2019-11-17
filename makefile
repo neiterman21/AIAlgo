@@ -1,5 +1,5 @@
 CC = javac
-classes = ex1.java CPT.java Bvar.java parser.java
+classes = ex1.java CPT.java Bvar.java parser.java RandomQuery.java
 ex1.class: $(classes)
 	$(CC) *.java
 
