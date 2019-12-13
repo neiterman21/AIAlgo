@@ -9,6 +9,18 @@
 
 import java.util.*; 
 
+class BvarMetaData {
+	public boolean colored = false;
+	public boolean visited_up = false;
+	public boolean visited_down = false;
+	public void reset() {
+		colored = false;
+		visited_up = false;
+		visited_down = false;
+	}
+}
+
+
 public class Bvar {
 	
 	public String name;
@@ -16,10 +28,12 @@ public class Bvar {
 	public ArrayList<Bvar> parents = new ArrayList<Bvar>();
 	public ArrayList<Bvar> children = new ArrayList<Bvar>();
 	public CPT cpt = new CPT();
+	public BvarMetaData meta_data = new BvarMetaData();
 	
 	public Bvar(String name_) {
 		name = name_;
 	}
+	
 	
 	public static Comparator<Bvar> getNameComparator() {
 		Comparator<Bvar> c = new Comparator<Bvar>() 
@@ -32,6 +46,11 @@ public class Bvar {
         
         return c;
 	}
+	
+	public void reset() {
+		meta_data.reset();
+	}
+
 	
 	public boolean equals(Object o) {
         // If the object is compared with itself then return true   

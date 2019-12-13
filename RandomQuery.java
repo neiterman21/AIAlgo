@@ -30,6 +30,7 @@ public class RandomQuery {
 		
 		return null;
 	}
+	public void Solve() {}
 }
 
 class BayesBallQuery extends RandomQuery {
@@ -49,6 +50,60 @@ class BayesBallQuery extends RandomQuery {
 			if(pv.length < 2) return;
 			givan.add(new VarVal(pv[0],pv[1]));
 		}
+	}
+	
+	@Override
+	public void Solve() {
+		for(Bvar b : bayes_net) {
+			b.reset();
+		}
+			
+		for (VarVal v : givan) {
+			Bvar.getBvarByName(bayes_net,v.name).meta_data.colored = true;
+		}
+		if (haspath(dep1, dep2, true) || haspath(dep1, dep2, false)) {
+			System.out.println("no");
+		}
+		else {
+			System.out.println("yes");
+		}
+		
+		
+	}
+	
+	private boolean haspath(Bvar s , Bvar t , boolean going_up) {
+		if (s.equals(t)) return true;
+		if(going_up) { //going up
+			s.meta_data.visited_up = true;
+			if (s.meta_data.colored == true) { //I am colored 
+				return false;
+			}
+			else { //I am uncolored				
+				for (Bvar chield : s.children) {
+					if (chield.meta_data.visited_down == false && haspath(chield , t , false)) return true;
+				}
+				for (Bvar parent : s.parents) {
+					if (parent.meta_data.visited_up == false && haspath(parent , t , true)) return true;
+				}
+			}
+		}
+		else { //going down
+			s.meta_data.visited_down = true;
+			if (s.meta_data.colored == true) { //I am colored 
+				for (Bvar parent : s.parents) {
+					if (parent.meta_data.visited_up == false && haspath(parent , t , true)) return true;
+				}
+			}
+			else {
+				//I am colored
+				for (Bvar chield : s.children) {
+					if (chield.meta_data.visited_down == false && haspath(chield , t , false)) return true;
+				}
+			}
+		}
+		
+		
+		return false;
 	}
 	
 	@Override

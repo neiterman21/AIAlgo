@@ -1,7 +1,7 @@
 CC = javac
 classes = ex1.java CPT.java Bvar.java parser.java RandomQuery.java
 ex1.class: $(classes)
-	$(CC) *.java
+	$(CC) -d bin/  *.java
 
 .PHONY: run clean
 
@@ -9,4 +9,4 @@ run:
 	java ex1
 
 clean:
-	rm *.class
+	rm bin/*.class
