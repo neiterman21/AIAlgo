@@ -72,6 +72,7 @@ public class Bvar {
 		//System.out.println("Name: " + name);
 		//for (Bvar c : collection) System.out.print(c.name + ",");
 		//System.out.println("index is: " + collection.indexOf(new Bvar(name)));
+		if (collection.indexOf(new Bvar(name)) == -1) return null;
 		return collection.get(collection.indexOf(new Bvar(name)));
 	}
 	

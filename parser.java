@@ -22,7 +22,7 @@ public class parser {
 	public ArrayList<RandomQuery> queries = new ArrayList<RandomQuery>(); 
 	Bvar hot_var; //variable curently working on
 	
-	String input_file = "../input.txt";
+	String input_file = "input.txt";
 		
 	Matcher m; 
 	
@@ -151,7 +151,7 @@ public class parser {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		parser p = new parser("../input.txt");
+		parser p = new parser("input2.txt");
 		p.parse();
 		
 		for( Bvar v :p.variables) {

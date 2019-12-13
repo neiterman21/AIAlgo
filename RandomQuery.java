@@ -54,13 +54,9 @@ class BayesBallQuery extends RandomQuery {
 	
 	@Override
 	public void Solve() {
-		for(Bvar b : bayes_net) {
-			b.reset();
-		}
+		reset(); //clean the network 
+		color(); //set the givan variables
 			
-		for (VarVal v : givan) {
-			Bvar.getBvarByName(bayes_net,v.name).meta_data.colored = true;
-		}
 		if (haspath(dep1, dep2, true) || haspath(dep1, dep2, false)) {
 			System.out.println("no");
 		}
@@ -71,8 +67,22 @@ class BayesBallQuery extends RandomQuery {
 		
 	}
 	
+	private void reset() {
+		for(Bvar b : bayes_net) {
+			b.reset();
+		}
+	}
+	
+	private void color() {
+		for (VarVal v : givan) {
+			Bvar.getBvarByName(bayes_net,v.name).meta_data.colored = true;
+		}
+	}
+	
 	private boolean haspath(Bvar s , Bvar t , boolean going_up) {
+		//Found a path
 		if (s.equals(t)) return true;
+
 		if(going_up) { //going up
 			s.meta_data.visited_up = true;
 			if (s.meta_data.colored == true) { //I am colored 
@@ -87,6 +97,7 @@ class BayesBallQuery extends RandomQuery {
 				}
 			}
 		}
+		
 		else { //going down
 			s.meta_data.visited_down = true;
 			if (s.meta_data.colored == true) { //I am colored 
@@ -94,8 +105,7 @@ class BayesBallQuery extends RandomQuery {
 					if (parent.meta_data.visited_up == false && haspath(parent , t , true)) return true;
 				}
 			}
-			else {
-				//I am colored
+			else { //I am uncolored
 				for (Bvar chield : s.children) {
 					if (chield.meta_data.visited_down == false && haspath(chield , t , false)) return true;
 				}
@@ -136,8 +146,17 @@ class VariableEliminationQuery extends RandomQuery {
 		}
 		//set hiden vars
 		String[] hiden_vars = hiden_.split("-",0);
-		for (String h : hiden_vars)
-			hiden.add(Bvar.getBvarByName(bayes_net_,h));
+		for (String h : hiden_vars) {
+			Bvar v = Bvar.getBvarByName(bayes_net_,h);
+			if(v != null)
+				hiden.add(v);
+		}
+			
+	}
+	
+	@Override
+	public void Solve() {
+		
 	}
 
 	@Override
