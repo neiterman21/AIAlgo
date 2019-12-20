@@ -126,6 +126,8 @@ public class Factor implements Comparable<Factor>{
 	public double getProb(VarVal v) {
 		for (Factor_entry e : table) {
 			if(e.variables.contains(v)) {
+				VarVal check = e.variables.get(e.variables.indexOf(v));
+				if(!check.val.equals(v.val)) continue;
 				return e.prob;
 			}
 		}
@@ -187,19 +189,26 @@ public class Factor implements Comparable<Factor>{
 		Iterator<Factor_entry> itr2 = table.iterator();
 		while(itr1.hasNext()) {
 			Factor_entry merge = itr1.next();
-			itr2.next();
-			while(itr2.hasNext()) {
-				Factor_entry merge2 = itr2.next();
+			double sum_prob = 0;
+			ArrayList<Factor_entry> toremove = new ArrayList<Factor_entry>();
+			for(Factor_entry merge2 : table) {
 				if(merge.equals(merge2)) {
-					Factor_entry e = new Factor_entry();
-					e.prob = merge.prob + merge2.prob;
-					VariableEliminationQuery.add++;
-					e.evidance = merge.evidance;
-					e.variables = merge.variables;
-					new_table.add(e);
-					table.removeIf(ent -> ent.equals(merge2));
-					break;
+					toremove.add(merge2);	
+					if(sum_prob == 0) 
+						sum_prob = merge2.prob;
+					else {
+						sum_prob = sum_prob +  merge2.prob;
+						VariableEliminationQuery.add++;			
+					}
 				}
+			}
+			if(toremove.size() > 0) {
+				Factor_entry e = new Factor_entry();
+				e.evidance = merge.evidance;
+				e.variables = merge.variables;
+				e.prob = sum_prob;
+				new_table.add(e);
+				table.removeAll(toremove);
 			}
 			itr1 = table.iterator();
 			itr2 = table.iterator();
@@ -208,7 +217,7 @@ public class Factor implements Comparable<Factor>{
 	}
 	
 	public void removeEvidance(VarVal e) {
-		evidanceList.remove(new Bvar(e.name));
+	//	variablesList.remove(new Bvar(e.name));
 		Iterator<Factor_entry> itr = table.iterator();
 		while (itr.hasNext()) {
 			Factor_entry entry = itr.next();

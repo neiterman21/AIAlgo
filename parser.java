@@ -22,7 +22,7 @@ public class parser {
 	public ArrayList<RandomQuery> queries = new ArrayList<RandomQuery>(); 
 	Bvar hot_var; //variable curently working on
 	
-	String input_file = "input.txt";
+	String input_file = "input2.txt";
 		
 	Matcher m; 
 	
@@ -53,7 +53,7 @@ public class parser {
 			String values_string = line.split(" ",0)[1];
 			String[] values = values_string.split(",", 0);
 			for (String val : values) {
-				hot_var.values.add(val);
+				hot_var.posible_values.add(val);
 			}
 					
 		}
@@ -76,14 +76,26 @@ public class parser {
 		String[] attrs = line.split(",", 0);
 		ArrayList<VarVal> parents_values = new ArrayList<VarVal>();
 		ArrayList<ValProb> value_probs  = new ArrayList<ValProb>();
-		Iterator itr_prt = hot_var.parents.iterator();
+		Iterator<Bvar> itr_prt = hot_var.parents.iterator();
 
-		for (int i = 0; i < hot_var.parents.size() ; i++) parents_values.add(new VarVal(((Bvar)itr_prt.next()).name , attrs[i]));
+		for (int i = 0; i < hot_var.parents.size() ; i++) parents_values.add(new VarVal((itr_prt.next()).name , attrs[i]));
 		
 		for (int i = hot_var.parents.size(); i < attrs.length ; i+=2) {
 			value_probs.add(new ValProb( attrs[i].substring(1,attrs[i].length()), Double.parseDouble(attrs[i+1])));
 		}
-		hot_var.cpt.entries.add(new CPT_entry(parents_values , value_probs));
+		double sumbrop = 0;
+		for(ValProb p : value_probs) sumbrop+=p.prob;
+		
+		double missingprob = 1 - sumbrop;
+		
+		for(String val : hot_var.posible_values) {
+			ValProb missing = new ValProb(val,missingprob);
+			if (!value_probs.contains(missing)) {
+				value_probs.add(missing);
+			}
+		}
+		
+ 		hot_var.cpt.entries.add(new CPT_entry(parents_values , value_probs));
 	}
 	
 	private void setQueris(String line) throws Exception {
@@ -148,22 +160,6 @@ public class parser {
 					
 		} 
 		setChildren();
-	}
-	
-	public static void main(String[] args) throws Exception {
-		parser p = new parser("input2.txt");
-		p.parse();
-		
-		for( Bvar v :p.variables) {
-			//v.print();
-		}
-		
-		for( RandomQuery q :p.queries) {
-			//q.print();
-			q.Solve();
-		}
-		
-		
 	}
 
 }

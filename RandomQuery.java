@@ -6,8 +6,12 @@
  * @author evgeny
  * 17 Nov 2019
  */
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,8 +25,16 @@ public class RandomQuery {
 	
 	public void print() {}
 	
+	protected boolean isAncestor(Bvar father , Bvar son) {
+		if(father.equals(son)) return true;
+		for (Bvar v : son.parents) {
+			if(isAncestor(father,v)) return true;
+		}
+		return false;
+	}
+	
 	public static RandomQuery QueryBuilder(String query_line , ArrayList<Bvar> bayes_net) {
-		Matcher m = Pattern.compile("P\\((.+)\\|(.+)\\),(.*)").matcher(query_line);
+		Matcher m = Pattern.compile("P\\((.+)\\|(.*)\\),(.*)").matcher(query_line);
 		if (m.find()) return new VariableEliminationQuery(m.group(1) ,m.group(2), m.group(3) ,bayes_net );
 		
 		m = Pattern.compile("(.+)\\|(.*)").matcher(query_line);
@@ -30,7 +42,7 @@ public class RandomQuery {
 		
 		return null;
 	}
-	public void Solve() {}
+	public void Solve(FileWriter fr) throws IOException{}
 }
 
 class BayesBallQuery extends RandomQuery {
@@ -52,20 +64,29 @@ class BayesBallQuery extends RandomQuery {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
+	public BayesBallQuery(ArrayList<VarVal> givan_ , Bvar v1 , Bvar v2 , ArrayList<Bvar> bayes_net_){
+		super(bayes_net_);
+		dep1 = v1;
+		dep2 = v2;
+		givan = (ArrayList<VarVal>)givan_.clone();
+	}
+	
 	@Override
-	public void Solve() {
+	public void Solve(FileWriter fr) throws IOException {
 		reset(); //clean the network 
 		color(); //set the givan variables
 			
 		if (haspath(dep1, dep2, true) || haspath(dep1, dep2, false)) {
+			fr.write("no"+ "\n");
 			System.out.println("no");
 		}
 		else {
+			fr.write("yes"+ "\n");
 			System.out.println("yes");
 		}
-		
-		
 	}
+
 	
 	private void reset() {
 		for(Bvar b : bayes_net) {
@@ -110,9 +131,7 @@ class BayesBallQuery extends RandomQuery {
 					if (chield.meta_data.visited_down == false && haspath(chield , t , false)) return true;
 				}
 			}
-		}
-		
-		
+		}		
 		return false;
 	}
 	
@@ -132,18 +151,26 @@ class VariableEliminationQuery extends RandomQuery {
 	VarVal var;
 	ArrayList<VarVal> givan = new ArrayList<VarVal>();
 	ArrayList<Bvar> hiden = new ArrayList<Bvar>();
+	ArrayList<Factor> factors = new ArrayList<Factor>();
+	static int mul = 0;
+	static int add = 0;
 	
 	public VariableEliminationQuery(String var_ ,String givan_ ,String hiden_ ,ArrayList<Bvar> bayes_net_) {
 		super(bayes_net_);
 		//set main var
 		var = new VarVal(var_.split("=")[0], var_.split("=")[1]);
 		//set givan
-		String[] given_vars = givan_.split(",",0);		
+		String[] given_vars = givan_.split(",",0);	
+
 		for (String v : given_vars) {
 			String[] pv = v.split("=", 2);
-			if(pv.length < 2) return;
+			if(pv.length < 2) break;
 			givan.add(new VarVal(pv[0],pv[1]));
+			Bvar bv = Bvar.getBvarByName(bayes_net_,v);
+			if(bv != null)
+				bv.value = pv[1];	
 		}
+
 		//set hiden vars
 		String[] hiden_vars = hiden_.split("-",0);
 		for (String h : hiden_vars) {
@@ -155,8 +182,87 @@ class VariableEliminationQuery extends RandomQuery {
 	}
 	
 	@Override
-	public void Solve() {
+	public void Solve(FileWriter fr) throws IOException{
+		removeIrelevant();
+		creatFactors();
+		removeEvidance();
 		
+		for (Bvar h : hiden) {
+			eliminate_var(h);
+		}
+		Factor f = joinOn(new Bvar(var.name));
+		if(hiden.size() > 0)
+			f.normalize();
+		
+		System.out.println(new DecimalFormat("#0.00000").format(f.getProb(var)) +"," +add + "," +mul);
+		fr.write(new DecimalFormat("#0.00000").format(f.getProb(var)) +"," +add + "," +mul + "\n");
+		add = 0;
+		mul = 0;
+	}	
+	public void creatFactors() {
+		for (Bvar b : bayes_net) {
+			factors.add(new Factor(b));
+		}	
+	}
+	
+	//checks if hidden variables are ancestors of main query or the evidence. 
+	//will remove them from bays net if irelevant
+	public void removeIrelevant() { 
+		Iterator<Bvar> itr = hiden.iterator();
+		while(itr.hasNext()) {
+			boolean isrelevant = false;
+			Bvar h = itr.next();
+			for(VarVal v : givan) {
+				Bvar check = Bvar.getBvarByName(bayes_net, v.name);
+				if(isAncestor(h,check)) isrelevant = true;
+			}
+			Bvar check = Bvar.getBvarByName(bayes_net, var.name);
+			if(isAncestor(h,check)) isrelevant = true;
+			
+			if(!isrelevant) {
+				bayes_net.remove(h);
+				itr.remove();
+			}
+		}
+	}
+	
+	private void  removeEvidance() {
+		for (VarVal e: givan) {
+			Iterator<Factor> itr = factors.iterator();
+			while (itr.hasNext()) {
+				Factor f = itr.next();
+				f.removeEvidance(e);
+				if(f.table.size() == 1) {
+					itr.remove();
+				}
+			}
+		}
+	}
+	
+	private Factor joinOn(Bvar h) {
+		ArrayList<Factor> to_join = new ArrayList<Factor>();
+		Iterator<Factor> itr = factors.iterator();
+		while (itr.hasNext()) {
+			
+			Factor f = itr.next();
+			if(f.contains(h)) {
+				to_join.add(f);
+				itr.remove();
+			}
+		}
+		Collections.sort(to_join);
+		
+		Factor joinf = new Factor();
+		for (Factor f : to_join) {
+			joinf.Join(f ,h);
+		}
+		return joinf;
+	}
+
+	private void eliminate_var(Bvar h) {
+		Factor joinf = joinOn(h);
+		joinf.sumOut(h);
+		factors.add(joinf);		
 	}
 
 	@Override

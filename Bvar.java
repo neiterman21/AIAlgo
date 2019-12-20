@@ -24,7 +24,8 @@ class BvarMetaData {
 public class Bvar {
 	
 	public String name;
-	public ArrayList<String> values = new ArrayList<String>();
+	public String value = "";
+	public ArrayList<String> posible_values = new ArrayList<String>();
 	public ArrayList<Bvar> parents = new ArrayList<Bvar>();
 	public ArrayList<Bvar> children = new ArrayList<Bvar>();
 	public CPT cpt = new CPT();
@@ -79,7 +80,7 @@ public class Bvar {
 	public void print() {
 		System.out.println("Name: " + name);
 		System.out.print("values: ");
-		for (String v : values) System.out.print(v + " "); System.out.print("\n");
+		for (String v : posible_values) System.out.print(v + " "); System.out.print("\n");
 		System.out.print("parents: ");
 		for (Bvar v : parents) System.out.print(v.name + " "); System.out.print("\n");
 		System.out.print("children: ");
@@ -87,4 +88,23 @@ public class Bvar {
 		cpt.print();
 		
 	}
+	public void removeFromCPT(Bvar evidance) {
+		for(CPT_entry entry : cpt.entries) {
+			if(entry.inParentsDiffVal(evidance)) {
+				cpt.entries.remove(entry);
+			}
+		}
+		
+		
+	}
+	
+	public void joinFactors(Bvar v) {
+		if (this == v ) return;
+		if (!parents.contains(v)) return;
+		parents.remove(v);
+		
+		
+		return ;
+	}
+	
 }

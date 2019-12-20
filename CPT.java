@@ -12,24 +12,33 @@ class ValProb {
 	public double prob;
 	public String val;
 	
-	ValProb ( String val_ , double prob_ ) {
+	public ValProb ( String val_ , double prob_ ) {
 		prob = prob_;
 		val = val_;
 	}
-}
-
-/*
- * represants a probabilety to get a spesific value of a variable
- */
-class VarVal {
-	public String name;
-	public String val;
 	
-	VarVal (String val_name_ , String val_) {
-		name = val_name_;
-		val = val_;
+	public ValProb(ValProb copy) {
+		prob = copy.prob;
+		val = copy.val;
+	}
+	
+	public boolean equals(Object o) {
+        // If the object is compared with itself then return true   
+        if (o == this) { 
+            return true; 
+        }
+        /* Check if o is an instance of Complex or not 
+        "null instanceof [type]" also returns false */
+      if (!(o instanceof ValProb)) { 
+          return false; 
+      }
+   // typecast o to Complex so that we can compare data members  
+      ValProb comp = (ValProb) o; 
+      
+      return val.compareTo(comp.val) == 0;
 	}
 }
+
 
 
 
@@ -48,9 +57,21 @@ class CPT_entry {
 		value_probs    = value_probs_;
 	}
 	
-	public boolean contains(ArrayList<String> subset) {
-		//for (String val)
-		return true;
+	public CPT_entry(CPT_entry copy) {
+		for (VarVal p : copy.parents_values) {
+			parents_values.add(new VarVal(p));
+		}
+		
+		for (ValProb p : copy.value_probs) {
+			value_probs.add(new ValProb(p));
+		}
+	}
+	
+	boolean inParentsDiffVal(Bvar b) {
+		for (VarVal v : parents_values) {
+			if(v.name == b.name && v.val != b.value) return true;
+		}
+		return false;
 	}
 	
 	public void print() {
@@ -64,15 +85,16 @@ public class CPT {
 	
 	public ArrayList<CPT_entry> entries = new ArrayList<CPT_entry>();
 	
-	public void addEntry(CPT_entry entry) {
-		entries.add(entry);
+	public CPT() {}
+	
+	public CPT(CPT copy) {
+		for(CPT_entry e : copy.entries) {
+			entries.add(new CPT_entry(e));
+		}
 	}
 	
-	public double getProb(ArrayList<String> known_dependencies , String val) {
-		for (CPT_entry e : entries) {
-			return  0.1;	
-			}
-		return 0.1;
+	public void addEntry(CPT_entry entry) {
+		entries.add(entry);
 	}
 	
 	public void print() {
